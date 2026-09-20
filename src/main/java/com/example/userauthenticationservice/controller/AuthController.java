@@ -1,6 +1,7 @@
 package com.example.userauthenticationservice.controller;
 
 // ✅ ADD THIS LINE
+import com.example.userauthenticationservice.dtos.ValidateTokenRequestDto;
 import org.antlr.v4.runtime.misc.Pair;
 import com.example.userauthenticationservice.dtos.LoginRequestDto;
 import com.example.userauthenticationservice.dtos.SignUpRequestDto;
@@ -40,6 +41,11 @@ public class AuthController {
                 );
         UserDto userDto = from(user);
         return new ResponseEntity<>(userDto, HttpStatus.OK);
+    }
+
+    @PostMapping("/validateToken")
+    public Boolean validateToken(@RequestBody ValidateTokenRequestDto validateTokenRequestDto) {
+        return authService.validateToken(validateTokenRequestDto.getToken());
     }
 
     @PostMapping("/login")

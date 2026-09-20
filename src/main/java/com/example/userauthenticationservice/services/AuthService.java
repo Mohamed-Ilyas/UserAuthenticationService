@@ -9,6 +9,8 @@ import com.example.userauthenticationservice.models.UserSession;
 import com.example.userauthenticationservice.repos.RoleRepo;
 import com.example.userauthenticationservice.repos.UserRepo;
 import com.example.userauthenticationservice.repos.UserSessionRepo;
+import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.JwtParser;
 import io.jsonwebtoken.Jwts;
 import org.antlr.v4.runtime.misc.Pair;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -33,6 +35,7 @@ public class AuthService implements IAuthService {
 
     @Autowired
     private UserSessionRepo userSessionRepo;
+
     @Autowired
     private SecretKey secretKey;
 
@@ -97,5 +100,25 @@ public class AuthService implements IAuthService {
         userSessionRepo.save(userSession);
 
         return new Pair<>(user, token);
+    }
+
+
+    public Boolean validateToken(String token ) {
+        Optional<UserSession> optionalUserSession = userSessionRepo.findByToken(token);
+
+        if(optionalUserSession.isEmpty()) return false;
+
+        JwtParser jwtParser = Jwts.parser().verifyWith(secretKey).build();
+        Claims claims = jwtParser.parseSignedClaims(token).getPayload();
+
+        Long expiry = (Long)claims.get("exp");
+        Long currentTime = System.currentTimeMillis();
+        if(currentTime > expiry) {
+            UserSession userSession = optionalUserSession.get();
+            userSessionRepo.deleteById(optionalUserSession.get().getId());
+            return false;
+        }
+
+        return true;
     }
 }
